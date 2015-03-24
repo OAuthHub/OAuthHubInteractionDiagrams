@@ -46,7 +46,7 @@ end_frame(ServiceProvider,AccessTokenRevocationFrame);
 step();
 
 active(Consumer);
-message(Consumer,ServiceProvider,"GET username (consumer_key,access_token,signature");
+message(Consumer,ServiceProvider,"GET username (consumer_key,access_token,signature)");
 active(ServiceProvider);
 return_message(ServiceProvider,Consumer,"401 (unauthorized)");
 inactive(ServiceProvider);
