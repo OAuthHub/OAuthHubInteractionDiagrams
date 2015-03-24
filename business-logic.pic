@@ -3,6 +3,8 @@ copy "inc/init.pic";
 step();
 
 begin_frame(Consumer,BusinessFrame,"Business Logic");
+step();
+
 active(Consumer);
 message(Consumer,ServiceProvider,"GET username (consumer_key,access_token,signature)");
 active(ServiceProvider);
@@ -10,7 +12,10 @@ return_message(ServiceProvider,Consumer,"200 (username)");
 inactive(ServiceProvider);
 step();
 inactive(Consumer);
+
+step();
 end_frame(ServiceProvider,BusinessFrame);
+step();
 
 complete(User);
 complete(Browser);

@@ -3,6 +3,7 @@ copy "inc/init.pic";
 step();
 
 begin_frame(User,AccessTokenRevocationFrame,"Acces Token Revocation");
+step();
 active(User);
 message(User,Browser,"Log in (username, password)");
 
@@ -30,6 +31,7 @@ inactive(Browser);
 step();
 inactive(User);
 
+step();
 end_frame(ServiceProvider,AccessTokenRevocationFrame);
 
 step();
