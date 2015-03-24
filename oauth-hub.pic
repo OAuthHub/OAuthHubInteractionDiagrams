@@ -1,0 +1,30 @@
+.PS
+copy "inc/init.pic";
+copy "inc/oauthhub-objects.pic";
+step();
+
+begin_frame(Consumer,OAuthHubFrame,"OAuthHub Business Logic");
+step();
+active(Consumer);
+message(Consumer,OAuthHub,"GET name (tokens,keys,etc.)");
+active(OAuthHub);
+step();
+message(OAuthHub,ServiceProvider,"GET firstname,lastname (tokens,keys,etc.)");
+active(ServiceProvider);
+step();
+return_message(ServiceProvider,OAuthHub,"200 lastname,firstname");
+inactive(ServiceProvider);
+return_message(OAuthHub,Consumer,"200 name");
+inactive(OAuthHub);
+step();
+inactive(Consumer);
+step();
+end_frame(ServiceProvider,OAuthHubFrame);
+
+complete(User,"User");
+complete(Browser,"Browser");
+complete(Consumer,"Consumer");
+complete(OAuthHub,"OAuthHub");
+complete(ServiceProvider,"Service Provider");
+
+.PE
