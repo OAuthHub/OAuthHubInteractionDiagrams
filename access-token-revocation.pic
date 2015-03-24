@@ -1,0 +1,51 @@
+.PS
+copy "sequence.pic";
+
+underline = 0;
+boxwid = 2.2;
+#boxht = 1;
+#maxpsht = 7;
+maxpswid = 7;
+
+object(User,"User");
+object(Browser,"Browser");
+object(Consumer,"Consumer");
+object(ServiceProvider,"Service Provider");
+step();
+
+begin_frame(User,AccessTokenRevocationFrame,"Acces Token Revocation");
+active(User);
+message(User,Browser,"Log in (username, password)");
+
+active(Browser);
+message(Browser,ServiceProvider,"GET login page (username, password)");
+
+active(ServiceProvider);
+return_message(ServiceProvider,Browser,"200 authenticated successfully");
+inactive(ServiceProvider);
+
+return_message(Browser,User,"Logged in");
+inactive(Browser);
+
+message(User,Browser,"Please remove rights from this consumer.");
+
+active(Browser);
+message(Browser,ServiceProvider,"GET remove access from <consumer>");
+
+active(ServiceProvider);
+return_message(ServiceProvider,Browser,"200 Token revoked");
+inactive(ServiceProvider);
+
+return_message(Browser,User,"Token revoked");
+inactive(Browser);
+step();
+inactive(User);
+
+end_frame(ServiceProvider,AccessTokenRevocationFrame);
+
+complete(User);
+complete(Browser);
+complete(Consumer);
+complete(ServiceProvider);
+.PE
+

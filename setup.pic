@@ -1,0 +1,98 @@
+.PS
+copy "sequence.pic";
+
+underline = 0;
+boxwid = 2.2;
+#boxht = 1;
+#maxpsht = 7;
+maxpswid = 7;
+
+object(User,"User");
+object(Browser,"Browser");
+object(Consumer,"Consumer");
+object(ServiceProvider,"Service Provider");
+step();
+
+begin_frame(Consumer,BeforeHandFrame,"Consumer developer set-up beforehand");
+step();
+active(Consumer);
+message(Consumer,ServiceProvider,"register as a Consumer");
+active(ServiceProvider);
+step();
+return_message(ServiceProvider,Consumer,"Consumer key & secret");
+inactive(ServiceProvider);
+step();
+inactive(Consumer);
+step();
+end_frame(ServiceProvider,BeforeHandFrame);
+step();
+
+message(User,Browser,"navigate to Consumer website");
+active(Browser);
+message(Browser,Consumer,"GET /");
+active(Consumer);
+step();
+return_message(Consumer,Browser,"200");
+inactive(Consumer);
+return_message(Browser,User,"('Sign In With Twitter' button)");
+inactive(Browser);
+step();
+
+begin_frame(User,OAuthFrame,"OAuth");
+step();
+
+message(User,Browser,"click 'Sign In ...' button");
+active(Browser);
+message(Browser,Consumer,"GET some_auth/");
+active(Consumer);
+message(Consumer,ServiceProvider,"GET oauth/request_token (callback)");
+active(ServiceProvider);
+#message(ServiceProvider,ServiceProvider,"store (request_token, callback) pair");
+step();
+return_message(ServiceProvider,Consumer,"200 (request token & secret)");
+inactive(ServiceProvider);
+return_message(Consumer,Browser,"302 (request token)");
+inactive(Consumer);
+step();
+message(Browser,ServiceProvider,"GET oauth/authorize_url (request token)");
+active(ServiceProvider);
+step();
+return_message(ServiceProvider,Browser,"200 ('Would you like to grant ...?')");
+inactive(ServiceProvider);
+step();
+return_message(Browser,User,"('Would you...?')");
+inactive(Browser);
+step();
+
+message(User,Browser,"(click 'allow')");
+active(Browser);
+message(Browser,ServiceProvider,"POST some_login/ (request token, 'allow')");
+active(ServiceProvider);
+step();
+#message(ServiceProvider,ServiceProvider,"authorize request token");
+#step();
+return_message(ServiceProvider,Browser,"302 (callback url, request token, oauth verifier)");
+inactive(ServiceProvider);
+step();
+message(Browser,Consumer,"GET callback/ (request token, oauth verifier)");
+active(Consumer);
+step();
+message(Consumer,ServiceProvider,"POST oauth/access_token (request token, oauth verifier)");
+active(ServiceProvider);
+step();
+return_message(ServiceProvider,Consumer,"200 access token & secret");
+inactive(ServiceProvider);
+return_message(Consumer,Browser,"200 (log-in sucess)");
+inactive(Consumer);
+return_message(Browser,User,"(logged in page)");
+inactive(Browser);
+step();
+
+end_frame(ServiceProvider,OAuthFrame);
+
+
+complete(User);
+complete(Browser);
+complete(Consumer);
+complete(ServiceProvider);
+.PE
