@@ -1,4 +1,4 @@
-Consumer->>+OAuthHub: "GET name (tokens,keys,etc.)"
-OAuthHub->>+ServiceProvider: "GET firstname,lastname (tokens,keys,etc.)"
-ServiceProvider-->>-OAuthHub: "200 lastname,firstname"
-OAuthHub-->>-Consumer: "200 name"
+Consumer ->>+ OAuthHub: "GET name (tokens,keys,etc.)"
+OAuthHub ->>+ ServiceProvider: "GET firstname,lastname (tokens,keys,etc.)"
+ServiceProvider -->>- OAuthHub: "200 lastname,firstname"
+OAuthHub -->>- Consumer: "200 name"

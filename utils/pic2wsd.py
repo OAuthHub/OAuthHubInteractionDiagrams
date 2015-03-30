@@ -35,14 +35,14 @@ while True:
         line = input()
         match = pat_message.search(line)
         if match:
-            print("{}->>+{}: {}".format(
+            print("{} ->>+ {}: {}".format(
                 match.group('from'),
                 match.group('to'),
                 match.group('msg')))
         else:
             match = pat_return_message.search(line)
             if match:
-                print("{}-->>-{}: {}".format(
+                print("{} -->>- {}: {}".format(
                     match.group('from'),
                     match.group('to'),
                     match.group('msg')))

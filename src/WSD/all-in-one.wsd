@@ -1,0 +1,39 @@
+participant User
+participant Browser
+participant Consumer
+participant ServiceProvider
+
+alt "Beforehand"
+    Consumer->>+ServiceProvider: "register as a Consumer"
+    ServiceProvider-->>-Consumer: "Consumer key & secret"
+end
+
+User->>+Browser: "navigate to Consumer website"
+Browser->>+Consumer: "GET /"
+Consumer-->>-Browser: "200"
+Browser-->>-User: "('Sign In With Twitter' button)"
+
+alt "OAuth"
+    User->>+Browser: "click 'Sign In ...' button"
+    Browser->>+Consumer: "GET some_auth/"
+    Consumer->>+ServiceProvider: "GET oauth/request_token (callback)"
+    ServiceProvider-->>-Consumer: "200 (request token & secret)"
+    Consumer-->>-Browser: "302 (request token)"
+    Browser->>+ServiceProvider: "GET oauth/authorize_url (request token)"
+    ServiceProvider-->>-Browser: "200 ('Would you like to grant ...?')"
+    Browser-->>-User: "('Would you...?')"
+
+    User->>+Browser: "(click 'allow')"
+    Browser->>+ServiceProvider: "POST some_login/ (request token, 'allow')"
+    
+    # User logs in
+
+
+    ServiceProvider-->>-Browser: "302 (callback url, request token, oauth verifier)"
+    Browser->>+Consumer: "GET callback/ (request token, oauth verifier)"
+    Consumer->>+ServiceProvider: "POST oauth/access_token (request token, oauth verifier)"
+    ServiceProvider-->>-Consumer: "200 access token & secret"
+    Consumer-->>-Browser: "200 (log-in sucess)"
+    Browser-->>-User: "(logged in page)"
+
+end

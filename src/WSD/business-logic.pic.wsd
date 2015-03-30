@@ -1,2 +1,2 @@
-Consumer->>+ServiceProvider: "GET username (consumer_key,access_token,signature)"
-ServiceProvider-->>-Consumer: "200 (username)"
+Consumer ->>+ ServiceProvider: "GET username (consumer_key,access_token,signature)"
+ServiceProvider -->>- Consumer: "200 (username)"
