@@ -1,12 +1,18 @@
 #!/bin/bash
 
 PIC_SRC_DIR='src/UMLGraph/'
-WSD_OUTPUT_DIR='src/WSD/'
 TRANSP_PATH='utils/pic2wsd.py'
+
+WSD_OUTPUT_DIR='src/WSD/'
+if [ ! -d "$WSD_OUTPUT_DIR" ]
+then
+    mkdir -p "$WSD_OUTPUT_DIR"
+fi
 
 for f in "$PIC_SRC_DIR"*.pic
 do
-    output_file_path="$WSD_OUTPUT_DIR""$(basename $PIC_SRC_DIR)".wsd
-    cat "$f" |\
-        python3 "$TRANSP_PATH" > "$output_file_path"
+    echo "Dealing with --------> ${f}..."
+    output_file_path="$WSD_OUTPUT_DIR""$(basename $f)".wsd
+    cat "$f" | python3 "$TRANSP_PATH" > "$output_file_path"
+    echo "Generated/Overwritten: $output_file_path"
 done
