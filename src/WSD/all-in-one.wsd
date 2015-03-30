@@ -1,39 +1,66 @@
+
+# Warning: This file is edited by hand. Don't overwrite it!
+#   (Although there's always Git.)
+
 participant User
 participant Browser
 participant Consumer
 participant ServiceProvider
 
-alt "Beforehand"
-    Consumer->>+ServiceProvider: "register as a Consumer"
-    ServiceProvider-->>-Consumer: "Consumer key & secret"
+opt "Beforehand"
+    Consumer ->>+ ServiceProvider: "register as a Consumer"
+    ServiceProvider -->>- Consumer: "Consumer key & secret"
 end
 
-User->>+Browser: "navigate to Consumer website"
-Browser->>+Consumer: "GET /"
-Consumer-->>-Browser: "200"
-Browser-->>-User: "('Sign In With Twitter' button)"
+User ->>+ Browser: "navigate to Consumer website"
+Browser ->>+ Consumer: "GET /"
+Consumer -->>- Browser: "200"
+Browser -->>- User: "('Sign In With Twitter' button)"
 
-alt "OAuth"
-    User->>+Browser: "click 'Sign In ...' button"
-    Browser->>+Consumer: "GET some_auth/"
-    Consumer->>+ServiceProvider: "GET oauth/request_token (callback)"
-    ServiceProvider-->>-Consumer: "200 (request token & secret)"
-    Consumer-->>-Browser: "302 (request token)"
-    Browser->>+ServiceProvider: "GET oauth/authorize_url (request token)"
-    ServiceProvider-->>-Browser: "200 ('Would you like to grant ...?')"
-    Browser-->>-User: "('Would you...?')"
+opt "OAuth"
+    User ->>+ Browser: "click 'Sign In ...' button"
+    Browser ->>+ Consumer: "GET some_auth/"
+    Consumer ->>+ ServiceProvider: "GET oauth/request_token (callback)"
+    ServiceProvider -->>- Consumer: "200 (request token & secret)"
+    Consumer -->>- Browser: "302 (request token)"
+    Browser ->>+ ServiceProvider: "GET oauth/authorize_url (request token, ServiceProvider session cookies)"
+    opt "if User is not logged in to ServiceProvider"
+        ServiceProvider -->>- Browser: "200 (log-in page)"
+        Browser -->>- User: "(log-in page)"
+        User -->>+ Browser: "(filled-in credentials)"
+        Browser -->>+ ServiceProvider: "POST sign_in/?request_token=... (request token, credentials)"
+    end
+    ServiceProvider -->>- Browser: "200 ('Would you like to grant ...?')"
+    Browser -->>- User: "('Would you...?')"
 
-    User->>+Browser: "(click 'allow')"
-    Browser->>+ServiceProvider: "POST some_login/ (request token, 'allow')"
-    
-    # User logs in
+    User ->>+ Browser: "(click 'allow')"
+    Browser ->>+ ServiceProvider: "POST some_login/ (request token, 'allow')"
+    ServiceProvider -->>- Browser: "302 (callback url, request token, oauth verifier)"
+    Browser ->>+ Consumer: "GET callback/ (request token, oauth verifier)"
+    Consumer ->>+ ServiceProvider: "POST oauth/access_token (request token, oauth verifier)"
+    ServiceProvider -->>- Consumer: "200 access token & secret"
+    note right of Consumer
+        Now the Consumer associates the access token/secret
+        with the User session (cookies)
+    end note
+    Consumer -->>- Browser: "200 (log-in sucess)"
+    Browser -->>- User: "(logged in page)"
+end
 
+opt "Business logic"
+    Consumer ->>+ ServiceProvider: "GET username (consumer_key, access_token, signature)"
+    ServiceProvider -->>- Consumer: "200 (username)"
+end
 
-    ServiceProvider-->>-Browser: "302 (callback url, request token, oauth verifier)"
-    Browser->>+Consumer: "GET callback/ (request token, oauth verifier)"
-    Consumer->>+ServiceProvider: "POST oauth/access_token (request token, oauth verifier)"
-    ServiceProvider-->>-Consumer: "200 access token & secret"
-    Consumer-->>-Browser: "200 (log-in sucess)"
-    Browser-->>-User: "(logged in page)"
-
+opt "Revocation"
+    User ->>+ Browser: "Log in (username, password)"
+    Browser ->>+ ServiceProvider: "GET login page (username, password)"
+    ServiceProvider -->>- Browser: "200 authenticated successfully"
+    Browser -->>- User: "Logged in"
+    User ->>+ Browser: "Please remove rights from this consumer."
+    Browser ->>+ ServiceProvider: "GET remove access from <consumer>"
+    ServiceProvider -->>- Browser: "200 Token revoked"
+    Browser -->>- User: "Token revoked"
+    Consumer ->>+ ServiceProvider: "GET username (consumer_key,access_token,signature)"
+    ServiceProvider -->>- Consumer: "401 (unauthorized)"
 end
