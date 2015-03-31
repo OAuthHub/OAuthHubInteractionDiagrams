@@ -1,0 +1,90 @@
+
+# Warning: This file is edited by hand. Don't overwrite it!
+#   (Although there's always Git.)
+
+participant User
+participant Browser
+participant Consumer
+participant OAuthHub
+participant ServiceProvider
+
+opt "Beforehand"
+    Consumer ->>+ OAuthHub: "register as a Consumer"
+    OAuthHub -->>- Consumer: "Consumer key & secret"
+    OAuthHub ->>+ ServiceProvider: "register as a Consumer"
+    ServiceProvider -->>- OAuthHub: "Consumer key & secret"
+end
+
+User ->>+ Browser: "navigate to Consumer website"
+Browser ->>+ Consumer: "GET /"
+Consumer -->>- Browser: "200"
+Browser -->>- User: "('Sign In (using OAuthHub)' button)"
+
+opt "OAuth between Consumer and OAuthHub"
+    User ->>+ Browser: "click 'Sign In'(with OAuthHub) button"
+    Browser ->>+ Consumer: "GET some_auth/"
+    Consumer ->>+ OAuthHub: "GET oauth/request_token (callback)"
+    OAuthHub -->>- Consumer: "200 (request token & secret)"
+    Consumer -->>- Browser: "302 (request token)"
+    Browser ->>+ OAuthHub: "GET oauth/authorize_url (request token, ServiceProvider session cookies)"
+
+    alt "if User isn't signed in to OAuthHub"
+        OAuthHub -->>- Browser: "(Sign in using Twitter: ...)"
+        Browser -->>- User: "(Sign in...)"
+        User ->>+ Browser: "(clicks 'Sign in with Twitter')"
+        Browser ->>+ OAuthHub: "GET some_auth/"
+        OAuthHub ->>+ ServiceProvider: "GET oauth/request_token (callback)"
+        ServiceProvider -->>- OAuthHub: "200 (request token & secret)"
+        OAuthHub -->>- Browser: "302 ServiceProvider.com/authorize_url (request token)"
+        Browser ->>+ ServiceProvider: "GET authorize_url/ (request token)"
+
+        alt "if User isn't signed in to Twitter"
+            ServiceProvider -->>- Browser: "200 (Please sign in using credentials)"
+            Browser -->>- User: "(Please...)"
+            User ->>+ Browser: "(Provides credentials, clicks submit)"
+            Browser ->>+ ServiceProvider: "POST some_login/ (credentials)"
+        end
+        ServiceProvider -->>- Browser: "200 ('Grant ... to OAuthHub?')"
+        Browser -->>- User: "('Grant ... OAuthHub?')"
+
+        User ->>+ Browser: "(Clicks 'yes')"
+        Browser ->>+ ServiceProvider: "POST ('yes', request token)"
+        ServiceProvider -->>- Browser: "302 (callback(to OAuthHub), oauth verifier)"
+        Browser ->>+ OAuthHub: "GET callback/ (request token, oauth verifier)"
+        OAuthHub ->>+ ServiceProvider: "GET oauth/access_token/ (request token, oauth verifier)"
+        ServiceProvider -->>- OAuthHub: "200 (access token & secret)"
+    end
+    OAuthHub -->>- Browser: "(Logged in using Twitter. Grant ... to Consumer?)"
+    Browser -->>- User: "(Logged in. Grant?)"
+
+    User ->>+ Browser: "(clicked 'yes')"
+    Browser ->>+ OAuthHub: "POST ('yes', request token)"
+    OAuthHub -->>- Browser: "302 callback(to Consumer), oauth verifier)"
+    Browser ->>+ Consumer: "GET callback/ (request token, oauth verifier)"
+    Consumer ->>+ OAuthHub: "POST oauth/access_token (request token, oauth verifier)"
+    OAuthHub -->>- Consumer: "200 access token & secret"
+    #note right of Consumer
+    #    Now the Consumer associates the access token/secret
+    #    with the User session (cookies)
+    #end note
+    Consumer -->>- Browser: "200 (log-in sucess)"
+    Browser -->>- User: "(logged in page)"
+end
+
+#opt "Business logic"
+#    Consumer ->>+ ServiceProvider: "GET username (consumer_key, access_token, signature)"
+#    ServiceProvider -->>- Consumer: "200 (username)"
+#end
+#
+#opt "Revocation"
+#    User ->>+ Browser: "Log in (username, password)"
+#    Browser ->>+ ServiceProvider: "GET login page (username, password)"
+#    ServiceProvider -->>- Browser: "200 authenticated successfully"
+#    Browser -->>- User: "Logged in"
+#    User ->>+ Browser: "Please remove rights from this consumer."
+#    Browser ->>+ ServiceProvider: "GET remove access from <consumer>"
+#    ServiceProvider -->>- Browser: "200 Token revoked"
+#    Browser -->>- User: "Token revoked"
+#    Consumer ->>+ ServiceProvider: "GET username (consumer_key,access_token,signature)"
+#    ServiceProvider -->>- Consumer: "401 (unauthorized)"
+#end
