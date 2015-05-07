@@ -1,3 +1,6 @@
 
 # Generated files managed by Zong & Gareth:
 gen/
+
+# nodejs npm
+node_modules/
