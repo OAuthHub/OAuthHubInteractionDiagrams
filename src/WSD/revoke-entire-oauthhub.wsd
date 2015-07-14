@@ -1,0 +1,16 @@
+# A user removing OAuthHub from a Service Provider completely
+
+participant User
+participant ServiceProvider
+participant OAuthHub
+participant Consumer
+
+User ->>+ ServiceProvider: "Remove access from OAuthHub"
+ServiceProvider -->>- User: "Token revoked"
+
+Consumer ->>+ OAuthHub: "GET name (consumer_key,access_token,signature)"
+
+OAuthHub ->>+ ServiceProvider: "GET username (consumer_key,access_token,signature)"
+ServiceProvider -->>- OAuthHub: "401 (unauthorized)"
+
+OAuthHub -->>- Consumer: "401 (unauthorized)"
