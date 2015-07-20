@@ -1,0 +1,64 @@
+
+# Warning: This file is edited by hand. Don't overwrite it!
+#   (Although there's always Git.)
+
+participant User
+participant Browser
+participant Consumer
+participant OAuthHub
+participant ServiceProvider
+
+User ->>+ Browser: "navigate to Consumer website"
+Browser ->>+ Consumer: "GET /"
+Consumer -->>- Browser: "200"
+Browser -->>- User: "('Sign In via OAuthHub')"
+
+
+User ->>+ Browser: "click 'Sign In via OAuthHub' button"
+Browser ->>+ Consumer: "GET /some_login_form"
+Consumer ->>+ OAuthHub: "GET /request_token {Consumer's callback}"
+OAuthHub -->>- Consumer: "200 {RT & RTS}"
+Consumer -->>- Browser: "302 <OAuthHub>/authorize_url {RT}"
+Browser ->>+ OAuthHub: "GET <302'd>"
+
+alt 1 - if User isn't signed in to OAuthHub: OAuth between OAuthHub and ServiceProvider
+	OAuthHub -->>- Browser: "200"
+	Browser -->>- User: "('Sign in with Twitter')"
+	User ->>+ Browser: "(clicks 'Sign in with Twitter')"
+	Browser ->>+ OAuthHub: "POST /some_login_submit {login credentials}"
+	OAuthHub ->>+ ServiceProvider: "GET /request_token {OAuthHub's callback}"
+	ServiceProvider -->>- OAuthHub: "200 {RT & RTS}"
+	OAuthHub -->>- Browser: "302 <ServiceProvider>/authorize_url {RT}"
+	Browser ->>+ ServiceProvider: "GET <302'd>"
+
+	alt 2 if User isn't signed in to Twitter: credential sign-in
+		ServiceProvider -->>- Browser: "200"
+		Browser -->>- User: "(username-password form)"
+		User ->>+ Browser: "(provides credentials, clicks submit)"
+		Browser ->>+ ServiceProvider: "POST /some_login/ {credentials}"
+	end
+	ServiceProvider -->>- Browser: "200"
+	Browser -->>- User: "('Grant OAuthHub access to <...>?')"
+
+	User ->>+ Browser: "(Clicks 'yes')"
+	Browser ->>+ ServiceProvider: "POST /some_callback/ {'yes'}"
+	ServiceProvider -->>- Browser: "302 <oah-callback> {oauth verifier}"
+	Browser ->>+ OAuthHub: "GET <302'd>"
+	OAuthHub ->>+ ServiceProvider: "GET /access_token {RT & RTS}"
+	ServiceProvider -->>- OAuthHub: "200 {AT & ATS}"
+end
+OAuthHub -->>- Browser: "200"
+Browser -->>- User: "('Logged in to <...>, authorize <...>?')"
+
+User ->>+ Browser: "(clicked 'yes')"
+Browser ->>+ OAuthHub: "POST /some_callback/ {'yes'}"
+OAuthHub -->>- Browser: "302 http://consumer.com {oauth verifier}"
+Browser ->>+ Consumer: "GET <302'd>"
+Consumer ->>+ OAuthHub: "POST /access_token {RT & RTS}"
+OAuthHub -->>- Consumer: "200 {AT & ATS}"
+#note right of Consumer
+#    Now the Consumer associates the access token/secret
+#    with the User session (cookies)
+#end note
+Consumer -->>- Browser: "200"
+Browser -->>- User: "('log-in sucess')"
