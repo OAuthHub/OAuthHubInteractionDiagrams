@@ -31,7 +31,7 @@ alt 1 - if User isn't signed in to OAuthHub: OAuth between OAuthHub and ServiceP
 	OAuthHub -->>- Browser: "302 <ServiceProvider>/authorize_url {RT}"
 	Browser ->>+ ServiceProvider: "GET <302'd>"
 
-	alt 2 if User isn't signed in to Twitter: credential sign-in
+	alt 2 - if User isn't signed in to Twitter: credential sign-in
 		ServiceProvider -->>- Browser: "200"
 		Browser -->>- User: "(username-password form)"
 		User ->>+ Browser: "(provides credentials, clicks submit)"
